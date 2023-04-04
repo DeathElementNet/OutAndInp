@@ -2,20 +2,19 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
 
-
 public class Main {
-    public static File binFileMain = new File("basket.bin");
+    public static File textFileMain = new File("basket.txt");
     public static String[] products = {"Пиво", "Водка", "Виски", "Чипсы", "Вобла", "Таранька", "Шашлык (цена за кг)"};
     public static int[] prices = {120, 700, 1500, 80, 60, 50, 300};
 
     public static void main(String[] args) throws IOException {
 
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Задача 2\n");
+        System.out.println("Задача 1\n");
         Basket basket;
-        if (binFileMain.exists()) {
-            basket = Basket.loadFromBinFile(binFileMain);
+        if (textFileMain.exists()) {
             System.out.println("Корзина уже существует и будет использована:");
+            basket = Basket.loadFromTxtFile(textFileMain);
             basket.printCart();
         } else {
             System.out.print("Корзина пуста. ");
@@ -39,13 +38,13 @@ public class Main {
 
             try {
                 if (Integer.parseInt(parts[0]) < 0 || Integer.parseInt(parts[0]) > products.length) {
-                    System.out.println(String.format("Надо вводить номер товара от '1' до '%s'",
+                    System.out.println(String.format("Надо вводить номер напитка от '1' до '%s'",
                             (products.length)));
                 } else if (Integer.parseInt(parts[1]) >= 0) {
                     int productNumber = Integer.parseInt(parts[0]) - 1;
                     int productCount = Integer.parseInt(parts[1]);
                     basket.addToCart(productNumber, productCount);
-                    basket.saveBin(binFileMain);
+                    basket.saveTxt(textFileMain);
                 } else
                     System.out.println(String.format("Количество товара не может быть отрицательным" +
                             " '%s'", Integer.parseInt(parts[1])));
