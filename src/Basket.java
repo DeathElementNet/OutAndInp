@@ -1,3 +1,6 @@
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.io.*;
 import java.util.Arrays;
 
@@ -41,53 +44,84 @@ public class Basket implements Serializable {
         System.out.printf("Итого: %d руб. \n", summaryBasket);
     }
 
-    public void saveTxt(File textFile) {
-        try (PrintWriter out = new PrintWriter(textFile)) {
-            for (String product : productsBasket)
-                out.print(product + " ");
-            out.println();
+//    public void saveTxt(File textFile) {
+//        try (PrintWriter out = new PrintWriter(textFile)) {
+//            for (String product : productsBasket)
+//                out.print(product + " ");
+//            out.println();
+//
+//            for (int price : pricesBasket)
+//                out.print(price + " ");
+//            out.println();
+//
+//            for (int amount : amountsBasket)
+//                out.print(amount + " ");
+//            out.print("\n" + summaryBasket);
+//            out.flush();
+//
+//        } catch (IOException ex) {
+//            System.out.println(ex.getMessage());
+//        }
+//    }
+//
+//    public static Basket loadFromTxtFile(File textFile) {
+//        String[] productsLoad;
+//        int[] pricesLoad;
+//        int[] amountsLoad;
+//        int summaryLoad;
+//        try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {
+//            productsLoad = (br.readLine()).split(" ");     // первая строка файла
+//            String[] interim2 = (br.readLine()).split(" ");// вторая строка файла
+//            pricesLoad = new int[productsLoad.length];
+//            for (int i = 0; i < interim2.length; i++) {
+//                pricesLoad[i] = Integer.parseInt(interim2[i]);
+//            }
+//
+//            String[] interim3 = (br.readLine()).split(" ");// третья строка файла
+//            amountsLoad = new int[interim3.length];
+//            for (int i = 0; i < interim3.length; i++) {
+//                amountsLoad[i] = Integer.parseInt(interim3[i]);
+//            }
+//
+//            summaryLoad = Integer.parseInt(br.readLine());       // четвертая строка файла
+//            return new Basket(productsLoad, pricesLoad, amountsLoad, summaryLoad);
+//        } catch (IOException ex) {
+//
+//            System.out.println(ex.getMessage());
+//        }
+//        return null;
+//    }
+public void saveJSON(File textFile) {
+    try (PrintWriter writer = new PrintWriter(textFile)) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(this);
+        writer.print(json);
 
-            for (int price : pricesBasket)
-                out.print(price + " ");
-            out.println();
+    } catch (IOException ex) {
+        System.out.println(ex.getMessage());
+    }
+}
 
-            for (int amount : amountsBasket)
-                out.print(amount + " ");
-            out.print("\n" + summaryBasket);
-            out.flush();
+    public static Basket loadFromJSONFile(File textFile) {
+        Basket basket = null;
+        try (BufferedReader reader = new BufferedReader(new FileReader(textFile))) {
+            StringBuilder builder = new StringBuilder();
+            String line = null;
+            while ((line = reader.readLine()) !=null){
+                builder.append(line);
+
+            }
+            Gson gson = new Gson();
+            basket = gson.fromJson(builder.toString(),Basket.class);
+
 
         } catch (IOException ex) {
-            System.out.println(ex.getMessage());
+
+            throw new RuntimeException(ex);
         }
+        return basket;
     }
 
-    public static Basket loadFromTxtFile(File textFile) {
-        String[] productsLoad;
-        int[] pricesLoad;
-        int[] amountsLoad;
-        int summaryLoad;
-        try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {
-            productsLoad = (br.readLine()).split(" ");     // первая строка файла
-            String[] interim2 = (br.readLine()).split(" ");// вторая строка файла
-            pricesLoad = new int[productsLoad.length];
-            for (int i = 0; i < interim2.length; i++) {
-                pricesLoad[i] = Integer.parseInt(interim2[i]);
-            }
-
-            String[] interim3 = (br.readLine()).split(" ");// третья строка файла
-            amountsLoad = new int[interim3.length];
-            for (int i = 0; i < interim3.length; i++) {
-                amountsLoad[i] = Integer.parseInt(interim3[i]);
-            }
-
-            summaryLoad = Integer.parseInt(br.readLine());       // четвертая строка файла
-            return new Basket(productsLoad, pricesLoad, amountsLoad, summaryLoad);
-        } catch (IOException ex) {
-
-            System.out.println(ex.getMessage());
-        }
-        return null;
-    }
 
     @Override
     public String toString() {
@@ -99,3 +133,5 @@ public class Basket implements Serializable {
 
     }
 }
+
+
