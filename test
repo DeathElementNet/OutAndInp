@@ -1,0 +1,303 @@
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.util.Scanner;
+
+public class Main {
+    public static File textFileMain = new File("basket.json");
+    public static String[] products = {"Пиво", "Водка", "Виски", "Чипсы", "Вобла", "Таранька", "Шашлык (цена за кг)"};
+    public static int[] prices = {120, 700, 1500, 80, 60, 50, 300};
+
+    public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {
+
+        XMLSettings settings = new XMLSettings(new File("shop.xml"));
+
+        File loadFile = new File(settings.loadFile);
+        File saveFile = new File(settings.saveFile);
+        File logFile = new File(settings.logFile);
+
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("Задача 1\n");
+
+        Basket basket = createBasket(loadFile, settings.isLoad, settings.loadFormat);
+
+//        if (textFileMain.exists()) {
+//            System.out.println("Корзина уже существует и будет использована:");
+//            basket = Basket.loadFromJSONFile(textFileMain);
+//        } else {
+//            System.out.print("Корзина пуста. ");
+//            basket = new Basket(products, prices);
+//
+//        }
+        //groceryList(basket);
+
+
+        ClientLog log = new ClientLog();
+        while (true) {
+            System.out.println("\nВыберите напиток или закусон и количество через пробел " +
+                    "или введите \"end\" для выхода:");
+            String input = scanner.nextLine();
+            if ("end".equals(input)) {
+                if (settings.isLog) {
+                    log.exportAsCSV(logFile);
+                }
+                // log.exportAsCSV(new File("log.csv"));
+                break;
+            }
+            String[] parts = input.split(" ");
+            if (parts.length != 2) {
+                System.out.println(String.format("Надо вводить два числа \"Номер Количество\"" +
+                        " через пробел, а не '%s'", input));
+                continue;
+            }
+
+
+            try {
+                if (Integer.parseInt(parts[0]) < 0 || Integer.parseInt(parts[0]) > products.length) {
+                    System.out.println(String.format("Надо вводить номер напитка от '1' до '%s'",
+                            (products.length)));
+                } else if (Integer.parseInt(parts[1]) >= 0) {
+                    int productNumber = Integer.parseInt(parts[0]) - 1;
+                    int productCount = Integer.parseInt(parts[1]);
+                    basket.addToCart(productNumber, productCount);
+                    if (settings.isLog) {
+                        log.Log(productNumber, productCount);
+                    }
+                    if (settings.isSave) {
+                        switch (settings.saveFormat) {
+                            case "json" ->
+                            case "txt" ->
+                        }
+                    }
+                    basket.saveJSON(textFileMain);
+
+                } else
+                    System.out.println(String.format("Количество товара не может быть отрицательным" +
+                            " '%s'", Integer.parseInt(parts[1])));
+            } catch (NumberFormatException e) {
+                System.out.println(String.format("Ошибка ввода, вы ввели не два числа через пробел:" +
+                        " '%s'", input));
+            }
+        }
+
+        System.out.println("Ваша корзина:");
+
+        basket.printCart();
+
+    }
+
+    private static Basket createBasket(File loadFile, boolean isLoad, String loadFormat) {
+        Basket basket;
+        if (isLoad && loadFile.exists()) {
+            switch (loadFormat) {
+                case "json" -> Basket.loadFromJSONFile(loadFile);
+                case "txt" -> Basket.loadFromJSONFile(loadFile);
+
+                default -> new Basket(products, prices);
+            }
+            ;
+        } else {
+            basket = new Basket(products, prices);
+        }
+        return basket;
+    }
+
+    private static void groceryList(Basket basket) {
+        System.out.println("Список доступных для покупки напитков:");
+        for (int i = 0; i < products.length; i++) {
+            System.out.printf("%d. %s %d руб/шт \n", i + 1, products[i], prices[i]);
+
+
+        }
+    }
+}
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
+import java.io.*;
+import java.util.Arrays;
+
+public class Basket implements Serializable {
+    private static final long serialVersionUID = 1L;
+    private String[] productsBasket;
+    private int[] pricesBasket;
+    private int[] amountsBasket;
+    private int summaryBasket;
+
+    public Basket(String[] productsBasket, int[] pricesBasket) {
+        this.productsBasket = productsBasket;
+        this.pricesBasket = pricesBasket;
+        this.amountsBasket = new int[productsBasket.length];
+        this.summaryBasket = 0;
+    }
+
+    public Basket(String[] productsBasket, int[] pricesBasket, int[] amountsBasket, int summaryBasket) {
+        this.productsBasket = productsBasket;
+        this.pricesBasket = pricesBasket;
+        this.amountsBasket = amountsBasket;
+        this.summaryBasket = summaryBasket;
+    }
+
+
+    public void addToCart(int productNum, int amount) {
+        int currentPrice = pricesBasket[productNum];
+        amountsBasket[productNum] += amount;
+        summaryBasket += currentPrice * amount;
+    }
+
+
+    public void printCart() {
+        for (int i = 0; i < amountsBasket.length; i++) {
+            if (!(amountsBasket[i] == 0)) {
+                System.out.printf("%s %d шт. по %d руб./шт. - %d руб в сумме; \n",
+                        productsBasket[i], amountsBasket[i], pricesBasket[i],
+                        (amountsBasket[i] * pricesBasket[i]));
+            }
+        }
+        System.out.printf("Итого: %d руб. \n", summaryBasket);
+    }
+
+    public void saveTxt(File textFile) {
+        try (PrintWriter out = new PrintWriter(textFile)) {
+            for (String product : productsBasket)
+                out.print(product + " ");
+            out.println();
+
+            for (int price : pricesBasket)
+                out.print(price + " ");
+            out.println();
+
+            for (int amount : amountsBasket)
+                out.print(amount + " ");
+            out.print("\n" + summaryBasket);
+            out.flush();
+
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
+    }
+
+    public static Basket loadFromTxtFile(File textFile) {
+        String[] productsLoad;
+        int[] pricesLoad;
+        int[] amountsLoad;
+        int summaryLoad;
+        try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {
+            productsLoad = (br.readLine()).split(" ");     // первая строка файла
+            String[] interim2 = (br.readLine()).split(" ");// вторая строка файла
+            pricesLoad = new int[productsLoad.length];
+            for (int i = 0; i < interim2.length; i++) {
+                pricesLoad[i] = Integer.parseInt(interim2[i]);
+            }
+
+            String[] interim3 = (br.readLine()).split(" ");// третья строка файла
+            amountsLoad = new int[interim3.length];
+            for (int i = 0; i < interim3.length; i++) {
+                amountsLoad[i] = Integer.parseInt(interim3[i]);
+            }
+
+            summaryLoad = Integer.parseInt(br.readLine());       // четвертая строка файла
+            return new Basket(productsLoad, pricesLoad, amountsLoad, summaryLoad);
+        } catch (IOException ex) {
+
+            System.out.println(ex.getMessage());
+        }
+        return null;
+    }
+public void saveJSON(File textFile) {
+    try (PrintWriter writer = new PrintWriter(textFile)) {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String json = gson.toJson(this);
+        writer.print(json);
+
+    } catch (IOException ex) {
+        System.out.println(ex.getMessage());
+    }
+}
+
+    public static Basket loadFromJSONFile(File textFile) {
+        Basket basket = null;
+        try (BufferedReader reader = new BufferedReader(new FileReader(textFile))) {
+            StringBuilder builder = new StringBuilder();
+            String line = null;
+            while ((line = reader.readLine()) !=null){
+                builder.append(line);
+
+            }
+            Gson gson = new Gson();
+            basket = gson.fromJson(builder.toString(),Basket.class);
+
+
+        } catch (IOException ex) {
+
+            throw new RuntimeException(ex);
+        }
+        return basket;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Basket:" +
+                "\nproductsBasket=" + Arrays.toString(productsBasket) +
+                "\npricesBasket=" + Arrays.toString(pricesBasket) +
+                "\namounts=" + Arrays.toString(amountsBasket) +
+                "\nsummary=" + summaryBasket;
+
+    }
+}
+
+
+//import org.w3c.dom.Document;
+//import org.w3c.dom.Element;
+//import org.xml.sax.SAXException;
+//
+//import javax.xml.parsers.DocumentBuilder;
+//import javax.xml.parsers.DocumentBuilderFactory;
+//import javax.xml.parsers.ParserConfigurationException;
+//import java.io.File;
+//import java.io.IOException;
+//
+//public class XMLSettings {
+//    final boolean isLoad;
+//    final String loadFile;
+//    final String loadFormat;
+//
+//    final boolean isSave;
+//    final String saveFile;
+//    final String saveFormat;
+//
+//    final boolean isLog;
+//    final String logFile;
+//
+//    public XMLSettings(File xmlFile) throws ParserConfigurationException, IOException, SAXException {
+//        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+//        DocumentBuilder builder = factory.newDocumentBuilder();
+//        Document doc = builder.parse(xmlFile);//builder.parse(xmlFile);
+//
+//
+//        Element root = doc.getDocumentElement();
+//        Element loadSettings = (Element) root.getElementsByTagName("load").item(0);
+//        Element saveSettings = (Element) root.getElementsByTagName("save").item(0);
+//        Element logSettings = (Element) root.getElementsByTagName("log").item(0);
+//
+//
+//        isLoad = Boolean.parseBoolean(loadSettings.getElementsByTagName("enabled").item(0).getTextContent());
+//        loadFile = loadSettings.getElementsByTagName("fileName").item(0).getTextContent();
+//        loadFormat = loadSettings.getElementsByTagName("format").item(0).getTextContent();
+//
+//        isSave = Boolean.parseBoolean(saveSettings.getElementsByTagName("enable").item(0).getTextContent());
+//        //isSave = Boolean.parseBoolean(saveSettings.getElementsByTagName("enable").item(0).getTextContent());
+//        saveFile = saveSettings.getElementsByTagName("fileName").item(0).getTextContent();
+//        saveFormat = saveSettings.getElementsByTagName("format").item(0).getTextContent();
+//
+//        isLog = Boolean.parseBoolean(logSettings.getElementsByTagName("enable").item(0).getTextContent());
+//        logFile = logSettings.getElementsByTagName("fileName").item(0).getTextContent();
+//
+//
+//    }
+//}
+
