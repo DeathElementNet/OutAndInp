@@ -1,5 +1,10 @@
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,15 +19,21 @@ public class Main {
 
     public static void main(String[] args) throws IOException, ParserConfigurationException, SAXException {
 
-        XMLSettings settings = new XMLSettings (new File("shop.xml"));
-        File loadFile = new File(settings.loadFile);
-        File saveFile = new File(settings.saveFile);
-        File logFile = new File(settings.logFile);
+
+       XMLSettings settings = new XMLSettings (new File("shop.xml"));
+       File loadFile = new File(settings.getLoadFileName());
+       File saveFile = new File(settings.getSaveFileName());
+       File logFile = new File(settings.getLogFileName());
+
+
+
 
 
         System.out.println("Задача 1\n");
 
-        Basket basket = createBasket(loadFile, settings.isLoad, settings.loadFormat);
+        Basket basket = createBasket(loadFile , settings.isLoadEnabled(), settings.getLoadFormat());
+
+
         ClientLog log = new ClientLog();
 
         if (textFileMain.exists()) {
@@ -37,13 +48,13 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-       // ClientLog log = new ClientLog();
+
         while (true) {
             System.out.println("\nВыберите напиток или закусон и количество через пробел " +
                     "или введите \"end\" для выхода:");
             String input = scanner.nextLine();
             if ("end".equals(input)) {
-                if (settings.isLog) {
+                if (settings.isLogEnabled()) {
                     log.exportAsCSV(logFile);
                 }
 
@@ -65,16 +76,16 @@ public class Main {
                     int productNumber = Integer.parseInt(parts[0]) - 1;
                     int productCount = Integer.parseInt(parts[1]);
                     basket.addToCart(productNumber, productCount);
-                    if (settings.isLog) {
+                    if (settings.isLogEnabled()) {
                         log.Log(productNumber, productCount);
                     }
-                    if (settings.isSave) {
-                        switch (settings.saveFormat) {
+                    if (settings.isSaveEnabled()) {
+                        switch (settings.getSaveFormat()) {
 
                         }
                     }
-                    if (settings.isSave) {
-                        switch (settings.saveFormat) {
+                    if (settings.isSaveEnabled()) {
+                        switch (settings.getSaveFormat()) {
                             case "json" -> basket.saveToJSON(saveFile);
                             case "txt" -> basket.saveTxt(saveFile);
 

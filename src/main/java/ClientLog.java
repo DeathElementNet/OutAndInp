@@ -12,12 +12,10 @@ public class ClientLog {
 
 
     public void Log(int productNum, int amount) {
-      //  log += String.format("%d,%d\n", productNum, amount);
         log.add(new String[] {"" + productNum, "" + amount});
     }
     public void exportAsCSV(File txtFile){
         if (!txtFile.exists()){
-           // log = "product,amount\n" + log;
             log.add(0,new String[] {"productNum,amount"} );
 
         }
